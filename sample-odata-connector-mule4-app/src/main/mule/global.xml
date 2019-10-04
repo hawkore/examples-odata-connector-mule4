@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:odata="http://www.mulesoft.org/schema/mule/odata" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/odata http://www.mulesoft.org/schema/mule/odata/current/mule-odata.xsd">
+	<odata:config name="OData_V2_Config" doc:name="OData Config" doc:id="9e3d2742-ed94-4263-9804-d1974f3e48e9" >
+		<odata:connection serviceEndpoint="http://localhost:8080/ODataV2.svc" />
+	</odata:config>
+	<odata:config name="OData_V4_Config" doc:name="OData Config" doc:id="d6bfbcf4-d6d7-4fa0-ad98-7bc20d1e8865" >
+		<odata:connection consumerVersion="V4" serviceEndpoint="http://localhost:8081/ODataV4.svc"/>
+	</odata:config>
+</mule>

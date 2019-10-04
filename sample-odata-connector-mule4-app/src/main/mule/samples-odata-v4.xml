@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:odata="http://www.mulesoft.org/schema/mule/odata"
+  xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/odata http://www.mulesoft.org/schema/mule/odata/current/mule-odata.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+  <flow name="odata-v4-create-entity" doc:id="a2401376-b63e-4a45-b506-94ff4435522e">
+		<odata:create-entity doc:name="Create car" doc:id="f7abc10e-b725-46d3-a181-8fd7cb379a56" config-ref="OData_V4_Config"
+      entitySetName="Cars" navigationProperty="---">
+      <odata:execution-mode>
+        <odata:single />
+      </odata:execution-mode>
+    </odata:create-entity>
+    <logger level="INFO" doc:name="Logger" doc:id="acfd6919-136e-4485-9071-aad6a3fb2364" message="#[message]" />
+  </flow>
+	<flow name="odata-v4-delete-entity" doc:id="c654630e-6a01-451a-9017-154168b499c2">
+    <odata:delete-entity entitySetName="Cars" doc:name="Delete Car" doc:id="639baf8b-afd5-4a0f-826a-b728251bcee0"
+      config-ref="OData_V4_Config">
+      <odata:execution-mode>
+        <odata:single />
+      </odata:execution-mode>
+      <odata:entity-key><![CDATA[#[%dw 2.0
+output application/java
+---
+{
+	Id: payload.Id
+}]]]></odata:entity-key>
+    </odata:delete-entity>
+    <logger level="INFO" doc:name="Logger" doc:id="db82d009-9fec-491f-90d4-03437e6fca24" message="#[message]" />
+  </flow>
+	<flow name="odata-v4-update-entity-partial" doc:id="7a1ec6cf-8c3e-4642-a9cb-bb099b52ee58">
+    <odata:update-entity doc:name="Update Car" doc:id="a20d2e2e-c85a-41c5-b576-7a08361536e6" config-ref="OData_V4_Config"
+      entitySetName="Cars">
+      <odata:execution-mode>
+        <odata:single />
+      </odata:execution-mode>
+      <odata:entity-key><![CDATA[#[%dw 2.0
+output application/java
+---
+{
+	Id: payload.Id
+}]]]></odata:entity-key>
+    </odata:update-entity>
+    <logger level="INFO" doc:name="Logger" doc:id="ac4dce79-2f29-4f11-ab5c-10c06f7e6375" message="#[message]" />
+  </flow>
+  <flow name="odata-v4-read-entity" doc:id="13fd2575-6c2a-49f0-9663-3d4dba131e7e">
+    <odata:get-entity doc:name="Read Car" doc:id="f347a1c5-ae73-4eae-9577-f5f06cc483af" config-ref="OData_V4_Config" entitySetName="Cars">
+      <odata:entity-key><![CDATA[#[%dw 2.0
+output application/java
+---
+{
+	Id: payload.Id
+}]]]></odata:entity-key>
+    </odata:get-entity>
+    <logger level="INFO" doc:name="Logger" doc:id="8de0409b-b28b-4f46-8a76-3aa2667e0dd3" message="#[message]" />
+		<error-handler >
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="56bebbb0-e816-4354-9633-e1e7bc462f05" type="ODATA:RESOURCE_NOT_FOUND">
+				<set-payload value="#[null]" doc:name="Entity Not found -&gt; set payload to null for testing purposes" doc:id="9d5fb4a8-95e8-4a06-9ab1-0685675abff4" />
+			</on-error-continue>
+		</error-handler>
+  </flow>
+	<flow name="odata-v4-query-entities" doc:id="a7663169-7968-4861-8b07-9561567d7ecf">
+    <odata:query-entities doc:name="ENTITY - Query" doc:id="5a8021bd-7e8c-4ecc-96b0-3ed1fd05a51f"
+      config-ref="OData_V4_Config" entitySetName="Manufacturers" count="ENABLED" />
+    <logger level="INFO" doc:name="Logger" doc:id="960f8256-bf58-410e-b244-496812a7e2ef" message="#[message]" />
+  </flow>
+  <flow name="odata-v4-batch-create-entities" doc:id="ac8aa88e-9d5c-47b2-aab0-1b6d0c244af2">
+    <odata:query-entities doc:name="Get Manufacturers" doc:id="2ec69da7-5990-473c-9651-a8f920a987a3"
+      config-ref="OData_V4_Config" entitySetName="Manufacturers" count="ENABLED" />
+    <set-variable value="#[[]]" doc:name="init batch change set list" doc:id="ba9eedfb-3a61-492b-83f6-11d466723089"
+      variableName="operations" />
+    <foreach doc:name="For Each" doc:id="9480a572-4cb2-4fc6-9c25-71865a22159c" collection="#[payload]">
+      <odata:create-entity doc:name="Create Manufacturer" doc:id="43e1fb99-ea79-46ba-ae71-12b5e994ddf1"
+        config-ref="OData_V4_Config" entitySetName="Manufacturers" navigationProperty="---">
+        <odata:execution-mode>
+          <odata:add-to-change-set changeSet="#[vars.operations]" />
+        </odata:execution-mode>
+        <odata:entity-data><![CDATA[#[%dw 2.0
+output application/java
+var entry = payload
+---
+{
+	"Id": 'batch-created-' ++ uuid() as String,
+	"Name":  'batch-created-' ++ uuid() as String,
+	"Founded":   entry.Founded,
+	"Address": {
+		"Street":  'batch-created-street-' ++ uuid() as String,
+		"City":   entry.Address.City default(""),
+		"ZipCode":  entry.Address.ZipCode default(""),
+		"Country":  entry.Address.Country default("")
+	}
+}]]]></odata:entity-data>
+      </odata:create-entity>
+      <logger level="INFO" doc:name="Logger" doc:id="bb7deeda-7354-4aa5-affb-3a8c8c65f4cd"
+        message="#[attributes.changeSet]" />
+      <set-variable value="#[attributes.changeSet]" doc:name="update change set"
+        doc:id="07b5906e-d763-4368-b11d-5207af139a70" variableName="operations" />
+    </foreach>
+    <logger level="INFO" doc:name="Logger" doc:id="f19222b8-2b2d-4142-b381-79659fbdddfd" message="#[vars.operations]" />
+    <odata:send-change-set doc:name="send change set in a batch package" doc:id="2e5e46ce-8942-4449-9b75-400e102cf65b" config-ref="OData_V4_Config"
+      changeSet="#[vars.operations]" />
+    <logger level="INFO" doc:name="Logger" doc:id="54a53495-1206-4638-8856-c9ab537e74a9" message="#[message]" />
+
+  </flow>
+
+  <flow name="odata-v4-batch-update-entities" doc:id="bab860f8-c279-4f86-b2c5-8080cc4a23b6">
+    <odata:query-entities doc:name="Get Manufacturers" doc:id="3b8b7dce-e489-4cef-a6aa-e7488963e95b"
+      config-ref="OData_V4_Config" entitySetName="Manufacturers" count="ENABLED" />
+    <set-variable value="#[[]]" doc:name="init batch change set list" doc:id="369aab61-49da-4e1c-b732-4b21dff5510b"
+      variableName="operations" />
+    <foreach doc:name="For Each" doc:id="a60c06eb-d01f-43cd-bca0-59506a4af694" collection="#[payload]">
+      <odata:update-entity doc:name="Update Manufacturer" doc:id="1633187d-da3b-4966-a563-ceabf2322c7d"
+        config-ref="OData_V4_Config" entitySetName="Manufacturers">
+        <odata:execution-mode>
+          <odata:add-to-change-set changeSet="#[vars.operations]" />
+        </odata:execution-mode>
+        <odata:entity-key><![CDATA[#[output application/java
+---
+{
+	"Id": payload.Id as String
+}]]]></odata:entity-key>
+        <odata:entity-data><![CDATA[#[%dw 2.0
+output application/java
+var entry = payload
+---
+{
+	"Id": entry.Id,
+	"Name":  'updated-' ++ uuid() as String,
+	"Founded":   entry.Founded,
+	"Cars":[
+      {
+      "Id":"1"
+      }
+	],
+	"Address": {
+		"Street":  'updated-street-' ++ uuid() as String,
+		"City":   entry.Address.City default(""),
+		"ZipCode":  entry.Address.ZipCode default(""),
+		"Country":  entry.Address.Country default("")
+	}
+}]]]></odata:entity-data>
+      </odata:update-entity>
+      <logger level="INFO" doc:name="Logger" doc:id="9e3a5e56-a250-4af8-938c-26549b01509c"
+        message="#[attributes.changeSet]" />
+      <set-variable value="#[attributes.changeSet]" doc:name="update change set"
+        doc:id="b93cd36b-4333-47d0-be36-176e774a2be9" variableName="operations" />
+    </foreach>
+    <logger level="INFO" doc:name="Logger" doc:id="a7b7f66d-13db-4e56-b7ff-b2ce7ecf4f39" message="#[vars.operations]" />
+    <odata:send-change-set doc:name="send change set in a batch package" doc:id="17b5e728-4fa4-4089-ab0a-3797dd4230f4" config-ref="OData_V4_Config"
+      changeSet="#[vars.operations]" />
+    <logger level="INFO" doc:name="Logger" doc:id="4e6d0111-fbc2-441c-bd8a-4b11a6c5a6b5" message="#[message]" />
+
+  </flow>
+  <flow name="odata-v4-batch-delete-entities" doc:id="f6759bf9-89eb-4ee0-b5ba-76dba2866e22">
+    <odata:query-entities doc:name="Get Manufacturers created on previus batch" doc:id="53d7a071-1512-4abf-a600-dcf5ff56e56c"
+      config-ref="OData_V4_Config" entitySetName="Manufacturers" count="ENABLED" filter="startswith(Id,'batch-')" select="Id"/>
+    <set-variable value="#[[]]" doc:name="init batch change set list" doc:id="79e1e802-152c-49d8-880e-57dc9f08d99d"
+      variableName="operations" />
+    <foreach doc:name="For Each" doc:id="795d1c10-0da2-4bec-a7fa-8f04d994fd9f" collection="#[payload]">
+      <odata:delete-entity entitySetName="Manufacturers" doc:name="Delete Manufacturer"
+        doc:id="3a9eac16-17a3-43b8-96af-507f7227e235" config-ref="OData_V4_Config">
+        <odata:execution-mode>
+          <odata:add-to-change-set changeSet="#[vars.operations]" />
+        </odata:execution-mode>
+        <odata:entity-key><![CDATA[#[output application/java
+---
+{
+	"Id": payload.Id as String
+}]]]></odata:entity-key>
+      </odata:delete-entity>
+      <logger level="INFO" doc:name="Logger" doc:id="d40173c5-6419-4611-aa51-6a535f10cd4d"
+        message="#[attributes.changeSet]" />
+      <set-variable value="#[attributes.changeSet]" doc:name="update change set"
+        doc:id="3ecf231c-b836-40f6-b52c-8a2c0747e614" variableName="operations" />
+    </foreach>
+    <logger level="INFO" doc:name="Logger" doc:id="c7b6c9f1-aa61-4ada-afc3-2c4629747ebd" message="#[vars.operations]" />
+    <odata:send-change-set doc:name="send change set in a batch package" doc:id="9a251758-87b2-457f-b396-f8a42dff430c" config-ref="OData_V4_Config"
+      changeSet="#[vars.operations]" />
+    <logger level="INFO" doc:name="Logger" doc:id="2c28bdb0-6d1c-4238-826a-1623f04cca55" message="#[message]" />
+
+  </flow>
+	<flow name="odata-v4-query-manufacturers-batch-created" doc:id="8e0a4bb9-6bbe-40a3-8d07-193f53e3e2b6" >
+		<odata:query-entities doc:name="Get Manufacturers created on batch create" doc:id="57c7b092-6df3-49e5-af85-02796e939cbc" config-ref="OData_V4_Config" entitySetName="Manufacturers" filter="startswith(Id,'batch-created')" count="ENABLED" />
+	</flow>
+	<flow name="odata-v4-query-manufacturers-batch-updated" doc:id="566b62da-281e-4414-a7a1-ad12f2bba71e" >
+		<odata:query-entities doc:name="Get Manufacturers created on batch update" doc:id="e186706b-2724-4d3d-966e-f659517e3627" config-ref="OData_V4_Config" entitySetName="Manufacturers" filter="startswith(Name,'updated')" count="ENABLED" />
+	</flow>
+	<flow name="odata-v4-query-manufacturers-batch" doc:id="1fa10c1d-e505-4585-9341-d4b9153404e5" >
+		<odata:query-entities doc:name="Get Manufacturers created on batch" doc:id="038f5f84-eee5-4c59-bf67-f4d7b8593abb" config-ref="OData_V4_Config" entitySetName="Manufacturers" filter="startswith(Id,'batch-')" count="ENABLED" />
+	</flow>		
+</mule>

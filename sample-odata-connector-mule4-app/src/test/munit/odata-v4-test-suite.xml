@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit" xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+	<munit:config name="odata-v4-test-suite.xml" />
+	<munit:test name="odata-v4-test-suite-odata-v4-create-entityTest" description="Test" doc:id="06abc028-95ff-4697-ae65-ae6e699c3dc2" >
+		<munit:execution >
+			<set-variable value="#[%dw 2.0
+output application/java
+---
+{
+	Id: 'atomic-created-' ++ uuid() as String,
+	Model: 'BMW',
+	Price: 60000.97,
+	ModelYear: 2019,
+	Updated: now()
+}]" doc:name="aCar" doc:id="3ce1a96e-e794-4bf9-a711-877c72094081" variableName="car"/>
+			<set-payload value="#[vars.car]" doc:name="Set car into payload" doc:id="8fba15be-c4a0-4416-a645-a07fe2414790" />
+			<flow-ref doc:name="Flow-ref to odata-v4-create-entity" doc:id="e19ff943-28e8-4d73-b371-ba6fe0266976" name="odata-v4-create-entity"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-that doc:name="Assert car was created" doc:id="a4b4a5f3-0fbd-43b9-bb1e-2c8eebcc0b73" expression="#[payload.Id]" is="#[MunitTools::equalTo(vars.car.Id)]" message="Entity should exists!!"/>
+		</munit:validation>
+	</munit:test>
+	<munit:test name="odata-v4-test-suite-odata-v4-delete-entityTest" description="Test" doc:id="b7ad4c82-77c4-42c0-a5ed-1441e5369ba2" >
+		<munit:execution >
+			<set-variable value="#[%dw 2.0
+output application/java
+---
+{
+	Id: 'CreatedId-' ++ uuid() as String,
+	Model: 'BMW',
+	Price: 60000.97,
+	ModelYear: 2019,
+	Updated: now()
+}]" doc:name="aCar" doc:id="cb79611c-7a1d-4f17-bfaa-a96d5cc9a5bc" variableName="car"/>
+			<set-payload value="#[vars.car]" doc:name="Set car into payload" doc:id="c6411394-1abe-4cb9-83dd-02a920d194d1" />		
+			<flow-ref doc:name="Flow-ref to odata-v4-create-entity" doc:id="3570695b-8bf4-4efb-8d02-59ca8b4f9b16" name="odata-v4-create-entity" />
+			<set-payload value="#[%dw 2.0
+output application/java
+---
+{
+	Id: vars.car.Id
+}]" doc:name="Set entity key for delete" doc:id="a9de7564-f969-4303-8a81-b0ffa60c466e" />
+			<flow-ref doc:name="Flow-ref to odata-v4-delete-entity" doc:id="dafaaffd-51d1-457a-9fd3-c14324539eb2" name="odata-v4-delete-entity"/>
+			<set-payload value="#[%dw 2.0
+output application/java
+---
+{
+	Id: vars.car.Id
+}]" doc:name="Set entity key for read" doc:id="b6b1cbfb-8e88-4b51-8c22-6a8b76428522" />
+			<flow-ref doc:name="Flow-ref to odata-v4-read-entity" doc:id="c94ed10a-0c3e-4032-8507-e138a10f07c9" name="odata-v4-read-entity" />
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-that doc:name="Entity should not exists!!" doc:id="958a5d85-c56d-4e1a-b946-021eb586c70d" expression="#[payload]" is="#[MunitTools::nullValue()]" message="Entity should not exists!!"/>
+		</munit:validation>
+	</munit:test>
+	<munit:test name="odata-v4-test-suite-odata-v4-update-entity-partialTest" description="Test" doc:id="1260f439-98ad-47c6-932f-518e8452226b" >
+		<munit:execution >
+			<set-variable value="#[%dw 2.0
+output application/java
+---
+{
+	Id: 'CreatedId-' ++ uuid() as String,
+	Model: 'BMW',
+	Price: 60000.97,
+	ModelYear: 2019,
+	Updated: now()
+}]" doc:name="aCar" doc:id="4e0357a3-0114-4dee-b874-5ba9c2cacdd0" variableName="car"/>
+			<set-payload value="#[vars.car]" doc:name="Set car into payload" doc:id="7c341e07-40f3-40e2-b696-58eee9cb7ae4" />		
+			<flow-ref doc:name="Flow-ref to odata-v4-create-entity" doc:id="087853c0-1408-420d-af45-261001b8384b" name="odata-v4-create-entity" />
+			<set-variable value="#[payload]" doc:name="createdEntity" doc:id="b3394de7-ec6d-4d34-aca7-3739a0cb9164" variableName="createdEntity"/>
+			<set-variable value="#[%dw 2.0
+output application/java
+---
+{
+	Id: vars.car.Id,
+	Price: 62000.97
+}]" doc:name="updatedEntity" doc:id="b7dd8cda-7cc3-48b3-8859-a309dfedc266" variableName="updatedEntity"/>
+			<set-payload value="#[vars.updatedEntity]" doc:name="updatedEntity to payload" doc:id="dcf6b341-0732-40d1-b6f6-0017fcf941e6" />
+			<flow-ref doc:name="Flow-ref to odata-v4-update-entity-partial" doc:id="97eb05e6-8ac9-4e13-afe1-396f1b1cc261" name="odata-v4-update-entity-partial"/>
+			<set-payload value="#[%dw 2.0
+output application/java
+---
+{
+	Id: vars.car.Id
+}]" doc:name="Set entity key for read" doc:id="5d6cb041-157f-453f-a2f1-88548b30da41" />
+			<flow-ref doc:name="Flow-ref to odata-v4-read-entity" doc:id="1458e6f6-11ec-45c5-a98d-19f42645e45d" name="odata-v4-read-entity" />
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-that doc:name="car should be created!!" doc:id="ad33dcd0-3999-447a-9c5e-2e8871b6c7bd" expression="#[vars.createdEntity.Id]" is="#[MunitTools::equalTo(vars.car.Id)]" message="car should be created!!" />
+			<munit-tools:assert-that doc:name="Price should be updated!!" doc:id="709beb85-d8ae-4bc4-b7e3-b6c97cbe907e" expression="#[payload.Price]" is="#[MunitTools::equalTo(vars.updatedEntity.Price)]" message="Price should be updated!!"/>
+		</munit:validation>
+	</munit:test>
+	<munit:test name="odata-v4-test-suite-odata-v4-read-entityTest" description="Test" doc:id="f57f259e-f7a3-4c59-8578-e3e9df56589f" >
+		<munit:execution >
+			<set-variable value="#[%dw 2.0
+output application/java
+---
+{
+	Id: 'CreatedId-' ++ uuid() as String,
+	Model: 'BMW',
+	Price: 60000.97,
+	ModelYear: 2019,
+	Updated: now()
+}]" doc:name="aCar" doc:id="02de6e72-8cd4-4952-a6e8-e3f80d414057" variableName="car"/>
+			<set-payload value="#[vars.car]" doc:name="Set car into payload" doc:id="39541ce7-5451-4665-a410-bccbcda0a946" />		
+			<flow-ref doc:name="Flow-ref to odata-v4-create-entity" doc:id="c1b548c9-c07c-4686-87b6-560f76d27aca" name="odata-v4-create-entity" />
+			<set-payload value="#[%dw 2.0
+output application/java
+---
+{
+	Id: vars.car.Id
+}]" doc:name="Set entity key for read" doc:id="e8145e7b-0046-4538-8747-849434f3c375" />
+			<flow-ref doc:name="Flow-ref to odata-v4-read-entity" doc:id="78a56818-4756-4964-bf1c-b91852bdf77d" name="odata-v4-read-entity"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-that doc:name="Car should exists" doc:id="3e475852-004c-47cd-a2f1-8e015ff7b589" expression="#[payload.Id]" is="#[MunitTools::equalTo(vars.car.Id)]" message="Car should exists!!" />
+		</munit:validation>
+	</munit:test>
+	<munit:test name="odata-v4-test-suite-odata-v4-query-entitiesTest" description="Test" doc:id="b19b01e1-43f6-4369-853e-6fdf16c86eba" >
+		<munit:execution >
+			<flow-ref doc:name="Flow-ref to odata-v4-query-entities" doc:id="ee6cbc30-b5bb-4f6e-a4da-52c7fe126458" name="odata-v4-query-entities"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-that doc:name="Count greater than 0" doc:id="8fb17feb-82f3-4eaa-bc14-700632de214a" expression="#[attributes.count]" is="#[MunitTools::greaterThan(0)]" message="Count greater than 0!!"/>
+		</munit:validation>
+	</munit:test>
+	<munit:test name="X-odata-v4-test-suite-odata-v4-batch-create-entitiesTest" description="Test" doc:id="2ea01dc5-9e60-4a01-85e6-05b366679b2e" >
+		<munit:execution >
+			<flow-ref doc:name="Flow-ref to odata-v4-batch-create-entities" doc:id="d24604e4-93e4-4daa-a4a6-bb4c1a8151e0" name="odata-v4-batch-create-entities"/>
+			<set-variable value="#[sizeOf(payload)]" doc:name="createdCount" doc:id="d238ae1a-2d2e-4548-8377-7c3429db4c69" variableName="createdCount" />
+			<flow-ref doc:name="Flow Reference manufacturers-batch-created" doc:id="7c0fdd17-d8f4-4cde-9363-16e2a1ed709c" name="odata-v4-query-manufacturers-batch-created"/>
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-that doc:name="created count greater than 0" doc:id="43dda75f-11d3-4e6d-bb86-00e71c028c68" expression="#[vars.createdCount]" is="#[MunitTools::greaterThan(0)]" message="Count greater than 0!!" />
+			<munit-tools:assert-that doc:name="query count greater than 0" doc:id="d481fac3-810b-41c3-83e9-08eca04be48e" expression="#[attributes.count]" is="#[MunitTools::greaterThan(0)]" message="query count greater than 0!!" />
+		</munit:validation>
+	</munit:test>
+	<munit:test name="Y-odata-v4-test-suite-odata-v4-batch-update-entitiesTest" description="Test" doc:id="110f8b54-3052-4edb-aef4-36e0b27ce8ed" >
+		<munit:execution >
+			<flow-ref doc:name="Flow-ref to odata-v4-batch-update-entities" doc:id="ce972c1b-4af7-44ef-8ab3-6adb5c16ebbe" name="odata-v4-batch-update-entities"/>
+			<set-variable value="#[sizeOf(payload)]" doc:name="updatedCount" doc:id="d6920879-36cb-4d6e-aacd-78718dfa6af1" variableName="updatedCount" />
+			<flow-ref doc:name="Flow Reference manufacturers-batch-updated" doc:id="18a76ed2-d0b9-4933-acb6-3c8804f4f168" name="odata-v4-query-manufacturers-batch-updated"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-that doc:name="updated count greater than 0" doc:id="20d24ec7-cb16-47c7-b5a5-aca4b64a7306" expression="#[vars.updatedCount]" is="#[MunitTools::greaterThan(0)]" message="updated count greater than 0!!" />
+			<munit-tools:assert-that doc:name="query count greater than 0" doc:id="659b7038-96bb-44c6-9cba-301ff742ef4c" expression="#[attributes.count]" is="#[MunitTools::greaterThan(0)]" message="query count greater than 0!!" />
+		</munit:validation>
+	</munit:test>
+	<munit:test name="Z-odata-v4-test-suite-odata-v4-batch-delete-entitiesTest" description="Test" doc:id="ffffffff-4c3b-4a08-bece-6955974a85f4" >
+		<munit:execution >
+			<flow-ref doc:name="Flow-ref to odata-v4-batch-delete-entities" doc:id="eee01490-744b-4a54-948d-73fa608bbfb3" name="odata-v4-batch-delete-entities"/>
+			<set-variable value="#[sizeOf(payload)]" doc:name="deletedCount" doc:id="15d6a938-1807-4129-b787-365d4734cdeb" variableName="deletedCount"/>
+			<flow-ref doc:name="Flow Reference manufacturers-batch" doc:id="5e5c2997-b1c3-4237-b160-d41c4a3e9cd0" name="odata-v4-query-manufacturers-batch"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-that doc:name="deleted count greater than 0" doc:id="7c58858d-e564-4b3a-b0ca-4c4c9d6228d3" expression="#[vars.deletedCount]" is="#[MunitTools::greaterThan(0)]" message="deleted count greater than 0!!" />
+			<munit-tools:assert-that doc:name="query count equals 0" doc:id="a24f2c86-1e04-4d20-afea-9aee41e71372" expression="#[attributes.count]" is="#[MunitTools::equalTo(0)]" message="query count equals 0!!" />
+		</munit:validation>
+	</munit:test>
+
+</mule>
