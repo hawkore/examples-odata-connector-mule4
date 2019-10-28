@@ -8,7 +8,7 @@
 
 ## Valid product license required
 
-You will need a valid product license to run/testing OData Connector for Mule 4.
+You will need a valid product license to run/test OData Connector for Mule 4.
 
 Put your license for OData Connector for Mule 4 in `src/main/resources` directory.
 
