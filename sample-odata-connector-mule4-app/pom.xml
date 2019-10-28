@@ -71,7 +71,7 @@
     <dependency>
       <groupId>com.hawkore.mule.extensions</groupId>
       <artifactId>mule-odata-connector</artifactId>
-      <version>1.0.0</version>
+      <version>1.0.1</version>
       <classifier>mule-plugin</classifier>
     </dependency>
 
