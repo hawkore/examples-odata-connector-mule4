@@ -16,7 +16,7 @@
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <jdk.version>1.8</jdk.version>
     <olingo2.version>2.0.11</olingo2.version>
-    <olingo4.version>4.6.0</olingo4.version>
+    <olingo4.version>4.7.1</olingo4.version>
     <!-- test dependency versions -->
     <spring-boot.version>2.1.4.RELEASE</spring-boot.version>
     <version.cxf>3.3.2</version.cxf>
