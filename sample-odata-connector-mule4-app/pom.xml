@@ -16,6 +16,7 @@
     <app.runtime>4.2.1</app.runtime>
     <mule.maven.plugin.version>3.2.7</mule.maven.plugin.version>
     <munit.version>2.1.5</munit.version>
+    <odata-connector.version>1.0.2</odata-connector.version>
   </properties>
 
   <build>
@@ -71,7 +72,7 @@
     <dependency>
       <groupId>com.hawkore.mule.extensions</groupId>
       <artifactId>mule-odata-connector</artifactId>
-      <version>1.0.1</version>
+      <version>${odata-connector.version}</version>
       <classifier>mule-plugin</classifier>
     </dependency>
 
